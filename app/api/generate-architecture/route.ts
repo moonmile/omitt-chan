@@ -32,7 +32,7 @@ interface SystemComponent {
 }
 
 interface SystemArchitecture {
-  architecture_type: 'web' | 'cloud' | 'hybrid' | 'on_premise';
+  architecture_type: 'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded';
   deployment_environment: 'cloud' | 'on_premise' | 'hybrid';
   components: SystemComponent[];
   network_requirements: string[];
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
   try {
     const { requirements, preferredArchitectureType } = await request.json() as { 
       requirements: StructuredRequirements;
-      preferredArchitectureType?: 'web' | 'cloud' | 'hybrid' | 'on_premise';
+      preferredArchitectureType?: 'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded';
     };
 
     const systemPrompt = `
@@ -56,13 +56,14 @@ ${preferredArchitectureType ? `
 - cloud: クラウドネイティブなスケーラブルシステム  
 - hybrid: クラウドとオンプレミスの組み合わせ
 - on_premise: オンプレミス環境での運用
+- embedded: ハードウェア組み込み型リアルタイムシステム
 
 このタイプを最優先に考慮して設計してください。
 ` : ''}
 
 以下の構造で返してください：
 {
-  "architecture_type": "web|cloud|hybrid|on_premise",
+  "architecture_type": "web|cloud|hybrid|on_premise|embedded",
   "deployment_environment": "cloud|on_premise|hybrid", 
   "components": [
     {
@@ -87,7 +88,20 @@ ${preferredArchitectureType ? `
 5. 設計指針からアーキテクチャパターンを決定
 ${preferredArchitectureType ? `6. 優先アーキテクチャタイプ「${preferredArchitectureType}」に適したコンポーネント構成を選択` : ''}
 
-重要：architecture_typeフィールドには${preferredArchitectureType ? `「${preferredArchitectureType}」を設定` : 'web、cloud、hybrid、on_premiseのいずれかを適切に選択'}してください。
+重要：architecture_typeフィールドには${preferredArchitectureType ? `「${preferredArchitectureType}」を設定` : 'web、cloud、hybrid、on_premise、embeddedのいずれかを適切に選択'}してください。
+
+${preferredArchitectureType === 'embedded' ? `
+組み込みシステム特有の考慮事項：
+- リアルタイム性能とレスポンス時間の要件
+- メモリとストレージの制約
+- 電力消費の最適化
+- ハードウェアインターフェース（GPIO、センサー、アクチュエータ）
+- 組み込みOS（RTOS、Linux等）の選択
+- デバイスドライバーとファームウェア
+- セキュリティ（物理セキュリティ、暗号化）
+- 遠隔アップデート機能
+- 障害処理とフェイルセーフ機構
+` : ''}
 
 現代的な技術スタックを推奨し、運用保守性・拡張性を考慮してください。
 `;

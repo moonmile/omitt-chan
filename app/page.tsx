@@ -21,7 +21,7 @@ interface SystemComponent {
 }
 
 interface SystemArchitecture {
-  architecture_type: 'web' | 'cloud' | 'hybrid' | 'on_premise';
+  architecture_type: 'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded';
   deployment_environment: 'cloud' | 'on_premise' | 'hybrid';
   components: SystemComponent[];
   network_requirements: string[];
@@ -57,7 +57,7 @@ export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [systemArchitecture, setSystemArchitecture] = useState<SystemArchitecture | null>(null);
   const [isGeneratingArchitecture, setIsGeneratingArchitecture] = useState(false);
-  const [selectedArchitectureType, setSelectedArchitectureType] = useState<'web' | 'cloud' | 'hybrid' | 'on_premise'>('web');
+  const [selectedArchitectureType, setSelectedArchitectureType] = useState<'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded'>('web');
   const [requirements, setRequirements] = useState<StructuredRequirements>({
     functional_requirements: [],
     non_functional_requirements: [],
@@ -772,19 +772,21 @@ Email：example@company.com
                 </label>
                 <select
                   value={selectedArchitectureType}
-                  onChange={(e) => setSelectedArchitectureType(e.target.value as 'web' | 'cloud' | 'hybrid' | 'on_premise')}
+                  onChange={(e) => setSelectedArchitectureType(e.target.value as 'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded')}
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
                   <option value="web">Webアプリケーション</option>
                   <option value="cloud">クラウドネイティブ</option>
                   <option value="hybrid">ハイブリッド</option>
                   <option value="on_premise">オンプレミス</option>
+                  <option value="embedded">組み込みシステム</option>
                 </select>
                 <p className="text-xs text-gray-500 mt-1">
                   {selectedArchitectureType === 'web' && 'ブラウザベースのWebアプリケーション'}
                   {selectedArchitectureType === 'cloud' && 'クラウドサービスを活用したスケーラブルなシステム'}
                   {selectedArchitectureType === 'hybrid' && 'クラウドとオンプレミスを組み合わせた構成'}
                   {selectedArchitectureType === 'on_premise' && '自社サーバーでの運用を前提とした構成'}
+                  {selectedArchitectureType === 'embedded' && 'ハードウェアに組み込まれたリアルタイムシステム'}
                 </p>
               </div>
               
