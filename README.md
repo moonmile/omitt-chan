@@ -1,36 +1,50 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# omitt-chan
 
-## Getting Started
+見積もり依頼作成ツール
 
-First, run the development server:
+- 発注者が、みずから希望する機能を入れて見積もり依頼書を作る
+- 見積もり依頼書のテンプレートを提供
+- 作成した見積依頼書をもとに3パターンの見積もりを作成する（相見積に使う）
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+# 画面構成
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- 左ペインに、発注者が対話的に入力するチャットフォーム
+- 中央ペインに、発注者が入力した要件や機能を構造化して表示する
+- 右ペインに、見積もり依頼書のテンプレートを表示する
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 要件チャット（左ペイン）
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- 発注者は、チャット形式で要件や機能などを入力する。
+- 発注者は非IT技術者のため、自然言語で要件を入力する。
+- 希望、要件、設計、制約などは混在して入力されるため、入力内容を解析して構造化する必要がある。
+- 発注者の入力を解析して、要件や機能を抽出し、中央ペインに表示する。
 
-## Learn More
+## 要件整理（中央ペイン）
 
-To learn more about Next.js, take a look at the following resources:
+- 中央ペインでは、発注者が入力した要件や機能を整理して表示する。
+- 要件と機能を区別して表示する。
+- 機能は、機能要件と非機能要件を区別して表示する。
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# 要件入力の例
 
-## Deploy on Vercel
+## 例1
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+- メールを配布するツールを作りたい
+- 宛先はあらじめ Excel に登録しておいて、指定した時刻に配布できるようにする。
+- 配布先はログに残しておく。
+- 配布先にはチェックボックスがあって、配布するかどうかを選べるようにする。
+- 毎日指定時刻に、定型文を送信する。このとき宛名は、Excel に記述した名前を使う。
+- 配布する宛先は500件ぐらいある
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 例2
+
+- 原子炉の制御棒の配置比較システムを試作する
+- 拡散方程式を使い、原子炉内の中性子の分布を計算する
+- 制御棒の配置を変更することで、出力の中性子の分布を調整できるようにする
+- 制御棒の配置パターンを色々変えた状態で、臨界ができるかチェックする
+- 配置パターンによりシミュレーションデータを出力する
+- 各実験により、シミュレーションデータを比較できる機能を持つ
+- ログイン機能を持ち、各ユーザーが実験データを別々に保存できる
+
+
