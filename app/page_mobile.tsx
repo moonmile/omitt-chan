@@ -89,7 +89,7 @@ export default function Home() {
         },
         body: JSON.stringify({ 
           message: currentMessage,
-          context: requirements
+          currentRequirements: requirements
         }),
       });
 
@@ -98,7 +98,7 @@ export default function Home() {
       if (data.success) {
         const assistantMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
-          content: data.assistantResponse || 'APIからの応答が空でした。',
+          content: data.response,
           sender: 'assistant',
           timestamp: new Date()
         };
@@ -113,7 +113,7 @@ export default function Home() {
       } else {
         const errorMessage: ChatMessage = {
           id: (Date.now() + 1).toString(),
-          content: data.error || 'エラーが発生しました。もう一度お試しください。',
+          content: 'エラーが発生しました。もう一度お試しください。',
           sender: 'assistant',
           timestamp: new Date()
         };
@@ -192,14 +192,14 @@ export default function Home() {
       if (data.success) {
         setChatMessages(prev => [...prev, {
           id: Date.now().toString(),
-          content: data.chatMessage || '検証結果が空でした。',
+          content: data.chatMessage,
           sender: 'assistant',
           timestamp: new Date()
         }]);
       } else {
         setChatMessages(prev => [...prev, {
           id: Date.now().toString(),
-          content: data.chatMessage || data.error || '要件の検証に失敗しました。',
+          content: data.chatMessage || '要件の検証に失敗しました。',
           sender: 'assistant',
           timestamp: new Date()
         }]);
@@ -323,11 +323,6 @@ ${systemArchitecture.scalability_considerations.map(consideration => `・${consi
   // Markdown風の簡単なフォーマット処理
   const MessageContent = ({ content }: { content: string }) => {
     const formatContent = (text: string) => {
-      // textが undefined や null の場合の安全チェック
-      if (!text || typeof text !== 'string') {
-        return '';
-      }
-      
       // **太字**を処理
       let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
       
@@ -336,11 +331,6 @@ ${systemArchitecture.scalability_considerations.map(consideration => `・${consi
       
       return formatted;
     };
-
-    // contentが undefined や null の場合の安全チェック
-    if (!content) {
-      return <div className="text-sm">メッセージが空です</div>;
-    }
 
     return (
       <div 

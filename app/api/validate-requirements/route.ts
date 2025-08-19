@@ -154,7 +154,14 @@ function generateChatMessage(validation: ValidationResult): string {
   };
 
   let message = `📋 **要件の確認結果**\n\n`;
-  message += `${statusEmoji[validation.overall_status]} **総合評価**: ${statusText[validation.overall_status]} (${validation.completeness_score}点/100点)\n\n`;
+  message += `${statusEmoji[validation.overall_status]} **総合評価**: ${statusText[validation.overall_status]} (${validation.completeness_score}点/100点)\n`;
+  
+  // 50点以上で合格判定を追加
+  if (validation.completeness_score >= 50) {
+    message += `🎉 **判定: 合格** - 見積もり・開発検討に進むことができます\n\n`;
+  } else {
+    message += `📝 **判定: 要検討** - もう少し要件を整理してから進めることをお勧めします\n\n`;
+  }
 
   if (validation.missing_requirements.length > 0) {
     message += `🔍 **追加で検討が必要な項目:**\n`;
@@ -188,12 +195,16 @@ function generateChatMessage(validation: ValidationResult): string {
     message += `\n`;
   }
 
-  if (validation.overall_status === 'good') {
-    message += `👍 要件がよく整理されています。このまま見積もり・開発の検討を進めることができそうです。`;
-  } else if (validation.overall_status === 'warning') {
-    message += `🔧 いくつか改善できる点がありますが、対応していただければ見積もり・開発を進められます。`;
+  if (validation.completeness_score >= 50) {
+    if (validation.overall_status === 'good') {
+      message += `👍 要件がよく整理されています。このまま見積もり・開発の検討を進めることができそうです。`;
+    } else if (validation.overall_status === 'warning') {
+      message += `🔧 いくつか改善できる点がありますが、対応していただければ見積もり・開発を進められます。`;
+    } else {
+      message += `⚠️ 一部に重要な確認事項がありますが、基本的な要件は整っています。見積もり検討を進めつつ、詳細を調整していきましょう。`;
+    }
   } else {
-    message += `🚨 重要な確認事項があります。見積もりの精度を上げるため、これらの内容を整理していただくことをお勧めします。`;
+    message += `🚨 重要な確認事項が多くあります。見積もりの精度を上げるため、これらの内容を整理していただくことをお勧めします。`;
   }
 
   return message;
