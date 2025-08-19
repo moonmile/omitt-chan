@@ -217,6 +217,112 @@ export default function Home() {
     }
   };
 
+  const saveRequirementsAsJSON = () => {
+    const currentTime = new Date();
+    const timestamp = currentTime.toISOString().replace(/[:.]/g, '-').slice(0, -5);
+    
+    const exportData = {
+      exportInfo: {
+        timestamp: currentTime.toISOString(),
+        version: "1.0",
+        tool: "omitt-chan",
+        totalRequirements: getAllRequirements().length
+      },
+      requirements: requirements,
+      systemArchitecture: systemArchitecture
+    };
+
+    const jsonString = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `requirements-${timestamp}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    // チャットにメッセージを追加
+    setChatMessages(prev => [...prev, {
+      id: Date.now().toString(),
+      content: `📁 構造化要件をJSONファイル「requirements-${timestamp}.json」として保存しました。`,
+      sender: 'assistant',
+      timestamp: new Date()
+    }]);
+  };
+
+  const loadRequirementsFromJSON = () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = (event) => {
+      const file = (event.target as HTMLInputElement).files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const content = e.target?.result as string;
+          const data = JSON.parse(content);
+          
+          // データ構造の検証
+          if (data.requirements && typeof data.requirements === 'object') {
+            const loadedRequirements = data.requirements;
+            
+            // 必要なプロパティが存在することを確認
+            const requiredProperties = [
+              'functional_requirements',
+              'non_functional_requirements', 
+              'constraints',
+              'wishes',
+              'design_guidelines'
+            ];
+            
+            const isValidStructure = requiredProperties.every(prop => 
+              Array.isArray(loadedRequirements[prop])
+            );
+            
+            if (isValidStructure) {
+              setRequirements(loadedRequirements);
+              
+              // システム構成も読み込む（存在する場合）
+              if (data.systemArchitecture) {
+                setSystemArchitecture(data.systemArchitecture);
+              }
+              
+              // 一時的に要件を設定してから計算（非同期なので次のレンダリングで計算）
+              setTimeout(() => {
+                const totalRequirements = getAllRequirements().length;
+                setChatMessages(prev => [...prev, {
+                  id: Date.now().toString(),
+                  content: `📂 JSONファイルから要件を読み込みました。（${totalRequirements}件の要件${data.systemArchitecture ? 'とシステム構成' : ''}を復元）`,
+                  sender: 'assistant',
+                  timestamp: new Date()
+                }]);
+              }, 100);
+            } else {
+              throw new Error('無効な要件データ構造です');
+            }
+          } else {
+            throw new Error('要件データが見つかりません');
+          }
+        } catch (error) {
+          console.error('Error loading JSON:', error);
+          setChatMessages(prev => [...prev, {
+            id: Date.now().toString(),
+            content: `❌ JSONファイルの読み込みに失敗しました。ファイル形式が正しくない可能性があります。`,
+            sender: 'assistant',
+            timestamp: new Date()
+          }]);
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  };
+
   const clearAllRequirements = () => {
     if (window.confirm('すべての要件を削除しますか？この操作は元に戻せません。')) {
       setRequirements({
@@ -513,6 +619,13 @@ ${systemArchitecture.scalability_considerations.map(consideration => `・${consi
                 </p>
               </div>
               <div className="flex gap-2">
+                <button
+                  onClick={loadRequirementsFromJSON}
+                  className="text-xs px-3 py-1 bg-purple-100 text-purple-600 rounded hover:bg-purple-200 focus:outline-none"
+                  title="JSONファイルから要件を読み込み"
+                >
+                  読み込み
+                </button>
                 {getAllRequirements().length > 0 && (
                   <>
                     <button
@@ -522,6 +635,13 @@ ${systemArchitecture.scalability_considerations.map(consideration => `・${consi
                       title="要件の検証（不足・矛盾チェック）"
                     >
                       {isAnalyzing ? '検証中...' : '検証'}
+                    </button>
+                    <button
+                      onClick={saveRequirementsAsJSON}
+                      className="text-xs px-3 py-1 bg-green-100 text-green-600 rounded hover:bg-green-200 focus:outline-none"
+                      title="構造化要件をJSONファイルで保存"
+                    >
+                      保存
                     </button>
                     <button
                       onClick={clearAllRequirements}
@@ -681,23 +801,37 @@ ${systemArchitecture.scalability_considerations.map(consideration => `・${consi
                     入力された要件 ({getAllRequirements().length}件)
                   </p>
                 </div>
-                {getAllRequirements().length > 0 && (
-                  <div className="flex gap-2">
-                    <button
-                      onClick={validateRequirements}
-                      disabled={isAnalyzing}
-                      className="text-xs px-3 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 focus:outline-none disabled:opacity-50"
-                    >
-                      {isAnalyzing ? '検証中...' : '検証'}
-                    </button>
-                    <button
-                      onClick={clearAllRequirements}
-                      className="text-xs px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 focus:outline-none"
-                    >
-                      全削除
-                    </button>
-                  </div>
-                )}
+                <div className="flex gap-2">
+                  <button
+                    onClick={loadRequirementsFromJSON}
+                    className="text-xs px-3 py-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 focus:outline-none"
+                  >
+                    読み込み
+                  </button>
+                  {getAllRequirements().length > 0 && (
+                    <>
+                      <button
+                        onClick={validateRequirements}
+                        disabled={isAnalyzing}
+                        className="text-xs px-3 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 focus:outline-none disabled:opacity-50"
+                      >
+                        {isAnalyzing ? '検証中...' : '検証'}
+                      </button>
+                      <button
+                        onClick={saveRequirementsAsJSON}
+                        className="text-xs px-3 py-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 focus:outline-none"
+                      >
+                        保存
+                      </button>
+                      <button
+                        onClick={clearAllRequirements}
+                        className="text-xs px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 focus:outline-none"
+                      >
+                        全削除
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
               
               <div className="flex-1 overflow-y-auto p-4 space-y-4">
