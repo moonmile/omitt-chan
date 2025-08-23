@@ -29,6 +29,11 @@ interface ValidationResult {
   unclear_requirements: string[];
   recommendations: string[];
   completeness_score: number;
+  critical_questions: {
+    system_type_missing: boolean;
+    personal_data_missing: boolean;
+    user_scope_missing: boolean;
+  };
 }
 
 export async function POST(request: NextRequest) {
@@ -54,10 +59,23 @@ export async function POST(request: NextRequest) {
   "contradictions": ["矛盾点1", "矛盾点2"],
   "unclear_requirements": ["曖昧な要件1", "曖昧な要件2"],
   "recommendations": ["推奨事項1", "推奨事項2"],
-  "completeness_score": 85
+  "completeness_score": 85,
+  "critical_questions": {
+    "system_type_missing": true,
+    "personal_data_missing": false,
+    "user_scope_missing": true
+  }
 }
 
+critical_questionsの判定基準：
+- system_type_missing: 新規開発か既存システムの移行・改修かが明記されていない場合はtrue
+- personal_data_missing: 個人情報を扱うかどうかが明記されていない場合はtrue
+- user_scope_missing: 利用者の範囲（特定少数/特定多数/不特定多数）が明記されていない場合はtrue
+
 重要な確認項目（専門用語を避けた表現で指摘）：
+- システムが新規作成か移行・改修かの明確化
+- システムが個人情報を扱うかどうかの確認
+- システムの利用者の範囲（特定の少数、特定の多数、不特定の多数）
 - セキュリティ対策の要件（個人情報保護、不正アクセス防止など）
 - 性能に関する具体的な数値（同時利用者数、応答速度など）
 - 必要な機能の網羅性（ユーザーがやりたいことが全て含まれているか）
@@ -161,6 +179,33 @@ function generateChatMessage(validation: ValidationResult): string {
     message += `🎉 **判定: 合格** - 見積もり・開発検討に進むことができます\n\n`;
   } else {
     message += `📝 **判定: 要検討** - もう少し要件を整理してから進めることをお勧めします\n\n`;
+  }
+
+  // クリティカルな質問の確認
+  const criticalQuestions = validation.critical_questions;
+  const hasCriticalQuestions = criticalQuestions.system_type_missing || 
+                              criticalQuestions.personal_data_missing || 
+                              criticalQuestions.user_scope_missing;
+
+  if (hasCriticalQuestions) {
+    message += `❓ **重要な確認事項** - 以下について教えてください：\n`;
+    
+    if (criticalQuestions.system_type_missing) {
+      message += `• このシステムは **新規作成** ですか？それとも **既存システムの移行・改修** ですか？\n`;
+    }
+    
+    if (criticalQuestions.personal_data_missing) {
+      message += `• このシステムは **個人情報を扱います** か？（氏名、メールアドレス、電話番号など）\n`;
+    }
+    
+    if (criticalQuestions.user_scope_missing) {
+      message += `• システムの利用者はどの範囲ですか？\n`;
+      message += `  - **特定の少数**（社内の特定部署など）\n`;
+      message += `  - **特定の多数**（全社員、会員など）\n`;
+      message += `  - **不特定の多数**（一般の方々）\n`;
+    }
+    
+    message += `\n`;
   }
 
   if (validation.missing_requirements.length > 0) {

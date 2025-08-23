@@ -32,7 +32,7 @@ interface SystemComponent {
 }
 
 interface SystemArchitecture {
-  architecture_type: 'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded';
+  architecture_type: 'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded' | 'mobile_app' | 'game';
   deployment_environment: 'cloud' | 'on_premise' | 'hybrid';
   components: SystemComponent[];
   network_requirements: string[];
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
   try {
     const { requirements, preferredArchitectureType } = await request.json() as { 
       requirements: StructuredRequirements;
-      preferredArchitectureType?: 'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded';
+      preferredArchitectureType?: 'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded' | 'mobile_app' | 'game';
     };
 
     const systemPrompt = `
@@ -53,6 +53,8 @@ export async function POST(request: NextRequest) {
 ${preferredArchitectureType ? `
 優先アーキテクチャタイプ: ${preferredArchitectureType}
 - web: ブラウザベースのWebアプリケーション
+- mobile_app: iOS/Androidスマートフォンアプリケーション
+- game: ゲーム開発に特化したアーキテクチャ（モバイル/PC/コンソール）
 - cloud: クラウドネイティブなスケーラブルシステム  
 - hybrid: クラウドとオンプレミスの組み合わせ
 - on_premise: オンプレミス環境での運用
@@ -63,7 +65,7 @@ ${preferredArchitectureType ? `
 
 以下の構造で返してください：
 {
-  "architecture_type": "web|cloud|hybrid|on_premise|embedded",
+  "architecture_type": "web|cloud|hybrid|on_premise|embedded|mobile_app|game",
   "deployment_environment": "cloud|on_premise|hybrid", 
   "components": [
     {
@@ -88,7 +90,7 @@ ${preferredArchitectureType ? `
 5. 設計指針からアーキテクチャパターンを決定
 ${preferredArchitectureType ? `6. 優先アーキテクチャタイプ「${preferredArchitectureType}」に適したコンポーネント構成を選択` : ''}
 
-重要：architecture_typeフィールドには${preferredArchitectureType ? `「${preferredArchitectureType}」を設定` : 'web、cloud、hybrid、on_premise、embeddedのいずれかを適切に選択'}してください。
+重要：architecture_typeフィールドには${preferredArchitectureType ? `「${preferredArchitectureType}」を設定` : 'web、mobile_app、game、cloud、hybrid、on_premise、embeddedのいずれかを適切に選択'}してください。
 
 ${preferredArchitectureType === 'embedded' ? `
 組み込みシステム特有の考慮事項：
@@ -101,6 +103,33 @@ ${preferredArchitectureType === 'embedded' ? `
 - セキュリティ（物理セキュリティ、暗号化）
 - 遠隔アップデート機能
 - 障害処理とフェイルセーフ機構
+` : ''}
+
+${preferredArchitectureType === 'mobile_app' ? `
+スマートフォンアプリ特有の考慮事項：
+- iOS/Androidのネイティブ開発 vs クロスプラットフォーム開発
+- アプリストア配布とレビュープロセス
+- モバイルデバイスの性能とバッテリー消費
+- タッチインターフェースとユーザビリティ
+- オフライン機能とデータ同期
+- プッシュ通知システム
+- モバイル特有のセキュリティ（生体認証、デバイス暗号化）
+- 多様な画面サイズへの対応
+- ネットワーク接続の不安定性への対処
+` : ''}
+
+${preferredArchitectureType === 'game' ? `
+ゲーム開発特有の考慮事項：
+- ターゲットプラットフォーム（PC、モバイル、コンソール）
+- ゲームエンジンの選択（Unity、Unreal Engine、自作エンジン）
+- リアルタイム描画とパフォーマンス最適化
+- マルチプレイヤー機能とネットワーク同期
+- ゲーム進行データの管理と保存
+- アセット管理（3Dモデル、テクスチャ、音声）
+- 物理演算とコリジョン検出
+- AI（敵キャラクター、NPC）の実装
+- 課金システムとゲーム内購入
+- 不正行為対策とセキュリティ
 ` : ''}
 
 現代的な技術スタックを推奨し、運用保守性・拡張性を考慮してください。

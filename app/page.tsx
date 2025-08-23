@@ -21,7 +21,7 @@ interface SystemComponent {
 }
 
 interface SystemArchitecture {
-  architecture_type: 'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded';
+  architecture_type: 'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded' | 'mobile_app' | 'game';
   deployment_environment: 'cloud' | 'on_premise' | 'hybrid';
   components: SystemComponent[];
   network_requirements: string[];
@@ -44,6 +44,20 @@ interface ChatMessage {
   timestamp: Date;
 }
 
+interface ValidationResult {
+  overall_status: 'good' | 'warning' | 'critical';
+  missing_requirements: string[];
+  contradictions: string[];
+  unclear_requirements: string[];
+  recommendations: string[];
+  completeness_score: number;
+  critical_questions: {
+    system_type_missing: boolean;
+    personal_data_missing: boolean;
+    user_scope_missing: boolean;
+  };
+}
+
 export default function Home() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     {
@@ -57,7 +71,7 @@ export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [systemArchitecture, setSystemArchitecture] = useState<SystemArchitecture | null>(null);
   const [isGeneratingArchitecture, setIsGeneratingArchitecture] = useState(false);
-  const [selectedArchitectureType, setSelectedArchitectureType] = useState<'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded'>('web');
+  const [selectedArchitectureType, setSelectedArchitectureType] = useState<'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded' | 'mobile_app' | 'game'>('web');
   const [activeTab, setActiveTab] = useState<'chat' | 'requirements' | 'estimate'>('chat');
   const [requirements, setRequirements] = useState<StructuredRequirements>({
     functional_requirements: [],
@@ -106,6 +120,30 @@ export default function Home() {
         setChatMessages(prev => [...prev, assistantMessage]);
         
         if (data.requirements) {
+          // 既存要件数をチェック（デバッグ用）
+          const currentTotal = getAllRequirements().length;
+          
+          // 一時的に新しい要件を設定して数を計算
+          const tempRequirements = data.requirements as StructuredRequirements;
+          const newTotal = (
+            tempRequirements.functional_requirements.length +
+            tempRequirements.non_functional_requirements.length +
+            tempRequirements.constraints.length +
+            tempRequirements.wishes.length +
+            tempRequirements.design_guidelines.length
+          );
+          
+          // 要件数が大幅に減少した場合は警告
+          if (currentTotal > 0 && newTotal < currentTotal * 0.5) {
+            console.warn(`要件数が大幅に減少しました: ${currentTotal} → ${newTotal}`);
+            setChatMessages(prev => [...prev, {
+              id: Date.now().toString(),
+              content: '⚠️ 注意: 既存の要件の一部が失われた可能性があります。必要に応じて確認してください。',
+              sender: 'assistant',
+              timestamp: new Date()
+            }]);
+          }
+          
           setRequirements(data.requirements);
           // 要件が更新された場合、自動的にシステム構成も生成
           generateSystemArchitecture(data.requirements);
@@ -386,6 +424,8 @@ ${systemArchitecture.architecture_type === 'web' ? 'Webアプリケーション'
   systemArchitecture.architecture_type === 'cloud' ? 'クラウドネイティブシステム' :
   systemArchitecture.architecture_type === 'hybrid' ? 'ハイブリッドシステム' :
   systemArchitecture.architecture_type === 'embedded' ? '組み込みシステム' :
+  systemArchitecture.architecture_type === 'mobile_app' ? 'スマートフォンアプリケーション' :
+  systemArchitecture.architecture_type === 'game' ? 'ゲームアプリケーション' :
   'オンプレミスシステム'
 }の開発をご依頼いたします。
 
@@ -610,7 +650,7 @@ ${systemArchitecture.scalability_considerations.map(consideration => `・${consi
           </div>
 
           {/* 要件ペイン */}
-          <div className="w-1/3 bg-white border-r border-gray-200">
+          <div className="w-1/3 bg-white border-r border-gray-200 flex flex-col">
             <div className="p-4 border-b border-gray-200 flex items-center justify-between">
               <div>
                 <h2 className="font-semibold text-gray-900">構造化要件</h2>
@@ -655,7 +695,7 @@ ${systemArchitecture.scalability_considerations.map(consideration => `・${consi
               </div>
             </div>
             
-            <div className="p-4 space-y-4 overflow-y-auto h-full">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {renderRequirementSection('機能要件', requirements.functional_requirements, 'functional_requirements', '⚙️')}
               {renderRequirementSection('非機能要件', requirements.non_functional_requirements, 'non_functional_requirements', '🎯')}
               {renderRequirementSection('制約条件', requirements.constraints, 'constraints', '🚫')}
@@ -673,63 +713,67 @@ ${systemArchitecture.scalability_considerations.map(consideration => `・${consi
           </div>
 
           {/* 見積もりペイン */}
-          <div className="w-1/3 bg-white">
+          <div className="w-1/3 bg-white flex flex-col">
             <div className="p-4 border-b border-gray-200">
               <h2 className="font-semibold text-gray-900">見積もり依頼書</h2>
               <p className="text-sm text-gray-600">自動生成されたテンプレート</p>
             </div>
             
-            <div className="p-4 overflow-y-auto h-full">
+            <div className="flex-1 overflow-y-auto p-4">
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
                 <pre className="text-sm text-gray-900 whitespace-pre-wrap font-mono">
                   {estimateTemplate}
                 </pre>
               </div>
-              
-              <div className="mt-4 space-y-2">
-                {/* アーキテクチャタイプ選択 */}
-                <div className="mb-4">
-                  <label className="block text-xs font-medium text-gray-700 mb-2">
-                    アーキテクチャタイプ
-                  </label>
-                  <select
-                    value={selectedArchitectureType}
-                    onChange={(e) => setSelectedArchitectureType(e.target.value as 'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded')}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                  >
-                    <option value="web">Webアプリケーション</option>
-                    <option value="cloud">クラウドネイティブ</option>
-                    <option value="hybrid">ハイブリッド</option>
-                    <option value="on_premise">オンプレミス</option>
-                    <option value="embedded">組み込みシステム</option>
-                  </select>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {selectedArchitectureType === 'web' && 'ブラウザベースのWebアプリケーション'}
-                    {selectedArchitectureType === 'cloud' && 'クラウドサービスを活用したスケーラブルなシステム'}
-                    {selectedArchitectureType === 'hybrid' && 'クラウドとオンプレミスを組み合わせた構成'}
-                    {selectedArchitectureType === 'on_premise' && '自社サーバーでの運用を前提とした構成'}
-                    {selectedArchitectureType === 'embedded' && 'ハードウェアに組み込まれたリアルタイムシステム'}
-                  </p>
-                </div>
-                
-                <button 
-                  onClick={() => generateSystemArchitecture()}
-                  disabled={isGeneratingArchitecture || getAllRequirements().length === 0}
-                  className="w-full px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
+            </div>
+
+            <div className="p-4 border-t border-gray-200 space-y-2">
+              {/* アーキテクチャタイプ選択 */}
+              <div className="mb-4">
+                <label className="block text-xs font-medium text-gray-700 mb-2">
+                  アーキテクチャタイプ
+                </label>
+                <select
+                  value={selectedArchitectureType}
+                  onChange={(e) => setSelectedArchitectureType(e.target.value as 'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded' | 'mobile_app' | 'game')}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
-                  {isGeneratingArchitecture ? (
-                    <>
-                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      システム構成生成中
-                    </>
-                  ) : (
-                    'システム構成を生成'
-                  )}
-                </button>
+                  <option value="web">Webアプリケーション</option>
+                  <option value="mobile_app">スマホアプリ</option>
+                  <option value="game">ゲーム</option>
+                  <option value="cloud">クラウドネイティブ</option>
+                  <option value="hybrid">ハイブリッド</option>
+                  <option value="on_premise">オンプレミス</option>
+                  <option value="embedded">組み込みシステム</option>
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  {selectedArchitectureType === 'web' && 'ブラウザベースのWebアプリケーション'}
+                  {selectedArchitectureType === 'mobile_app' && 'iOS/Androidスマートフォンアプリケーション'}
+                  {selectedArchitectureType === 'game' && 'ゲーム開発に特化したアーキテクチャ（モバイル/PC/コンソール）'}
+                  {selectedArchitectureType === 'cloud' && 'クラウドサービスを活用したスケーラブルなシステム'}
+                  {selectedArchitectureType === 'hybrid' && 'クラウドとオンプレミスを組み合わせた構成'}
+                  {selectedArchitectureType === 'on_premise' && '自社サーバーでの運用を前提とした構成'}
+                  {selectedArchitectureType === 'embedded' && 'ハードウェアに組み込まれたリアルタイムシステム'}
+                </p>
               </div>
+              
+              <button 
+                onClick={() => generateSystemArchitecture()}
+                disabled={isGeneratingArchitecture || getAllRequirements().length === 0}
+                className="w-full px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center"
+              >
+                {isGeneratingArchitecture ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    システム構成生成中
+                  </>
+                ) : (
+                  'システム構成を生成'
+                )}
+              </button>
             </div>
           </div>
         </div>
@@ -875,10 +919,12 @@ ${systemArchitecture.scalability_considerations.map(consideration => `・${consi
                     </label>
                     <select
                       value={selectedArchitectureType}
-                      onChange={(e) => setSelectedArchitectureType(e.target.value as 'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded')}
+                      onChange={(e) => setSelectedArchitectureType(e.target.value as 'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded' | 'mobile_app' | 'game')}
                       className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     >
                       <option value="web">Webアプリケーション</option>
+                      <option value="mobile_app">スマホアプリ</option>
+                      <option value="game">ゲーム</option>
                       <option value="cloud">クラウドネイティブ</option>
                       <option value="hybrid">ハイブリッド</option>
                       <option value="on_premise">オンプレミス</option>
@@ -886,6 +932,8 @@ ${systemArchitecture.scalability_considerations.map(consideration => `・${consi
                     </select>
                     <p className="text-sm text-gray-500 mt-2">
                       {selectedArchitectureType === 'web' && 'ブラウザベースのWebアプリケーション'}
+                      {selectedArchitectureType === 'mobile_app' && 'iOS/Androidスマートフォンアプリケーション'}
+                      {selectedArchitectureType === 'game' && 'ゲーム開発に特化したアーキテクチャ（モバイル/PC/コンソール）'}
                       {selectedArchitectureType === 'cloud' && 'クラウドサービスを活用したスケーラブルなシステム'}
                       {selectedArchitectureType === 'hybrid' && 'クラウドとオンプレミスを組み合わせた構成'}
                       {selectedArchitectureType === 'on_premise' && '自社サーバーでの運用を前提とした構成'}
