@@ -73,6 +73,7 @@ export default function Home() {
   const [isGeneratingArchitecture, setIsGeneratingArchitecture] = useState(false);
   const [selectedArchitectureType, setSelectedArchitectureType] = useState<'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded' | 'mobile_app' | 'game' | 'other'>('web');
   const [activeTab, setActiveTab] = useState<'chat' | 'requirements' | 'estimate'>('chat');
+  const [showHelp, setShowHelp] = useState(false);
   const [requirements, setRequirements] = useState<StructuredRequirements>({
     functional_requirements: [],
     non_functional_requirements: [],
@@ -467,6 +468,104 @@ ${systemArchitecture.scalability_considerations.map(consideration => `・${consi
 
   const estimateTemplate = generateEstimateTemplate();
 
+  // ヘルプページのコンテンツ
+  const HelpContent = () => (
+    <div className="p-6 bg-white rounded-lg shadow-lg max-w-4xl mx-auto">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">omitt-chan 使用方法</h1>
+        <p className="text-gray-600">見積もり依頼書の作成をサポートするAIツールです</p>
+      </div>
+
+      <div className="space-y-6">
+        <section>
+          <h2 className="text-xl font-semibold text-blue-800 mb-3">🚀 基本的な使い方</h2>
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <ol className="list-decimal list-inside space-y-2 text-sm">
+              <li><strong>要件を入力</strong>：チャットで自然な言葉でシステムの要件を説明してください</li>
+              <li><strong>要件の確認</strong>：AIが構造化した要件を「構造化要件」ペインで確認</li>
+              <li><strong>アーキテクチャ選択</strong>：適切なシステムタイプを選択</li>
+              <li><strong>構成生成</strong>：「システム構成を生成」ボタンで技術仕様を自動生成</li>
+              <li><strong>見積もり書作成</strong>：自動生成された見積もり依頼書を確認・利用</li>
+            </ol>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-semibold text-green-800 mb-3">💬 チャット機能</h2>
+          <div className="bg-green-50 p-4 rounded-lg space-y-2 text-sm">
+            <p><strong>要件入力のコツ：</strong></p>
+            <ul className="list-disc list-inside ml-4 space-y-1">
+              <li>「ユーザー管理機能が必要です」「データベースはMySQL希望」など具体的に</li>
+              <li>「月間1万人のユーザーを想定」など規模感も記載</li>
+              <li>「セキュリティは重要」「レスポンス速度を重視」など非機能要件も</li>
+              <li>「予算は〇〇万円程度」「開発期間は3ヶ月」など制約条件も重要</li>
+            </ul>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-semibold text-purple-800 mb-3">🏗️ アーキテクチャタイプ</h2>
+          <div className="bg-purple-50 p-4 rounded-lg">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+              <div><strong>Webアプリケーション</strong>：ブラウザベースのシステム</div>
+              <div><strong>スマホアプリ</strong>：iOS/Android向けアプリ</div>
+              <div><strong>ゲーム</strong>：ゲーム開発向け構成</div>
+              <div><strong>クラウドネイティブ</strong>：クラウド活用型</div>
+              <div><strong>ハイブリッド</strong>：クラウド＋オンプレミス</div>
+              <div><strong>オンプレミス</strong>：自社サーバー運用</div>
+              <div><strong>組み込みシステム</strong>：ハードウェア組み込み</div>
+              <div><strong>その他</strong>：特殊なシステム構成</div>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-semibold text-orange-800 mb-3">🔧 便利機能</h2>
+          <div className="bg-orange-50 p-4 rounded-lg space-y-3 text-sm">
+            <div>
+              <strong>📁 保存・読み込み</strong>
+              <p className="ml-4">要件をJSONファイルで保存し、後で読み込んで作業を継続できます</p>
+            </div>
+            <div>
+              <strong>✅ 要件検証</strong>
+              <p className="ml-4">「検証」ボタンで要件の不足や矛盾をチェックできます</p>
+            </div>
+            <div>
+              <strong>📱 モバイル対応</strong>
+              <p className="ml-4">スマートフォンでもタブ切り替えで快適に利用可能</p>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-semibold text-red-800 mb-3">⚠️ 注意事項</h2>
+          <div className="bg-red-50 p-4 rounded-lg space-y-2 text-sm">
+            <p><strong>AIによる自動生成</strong>：生成された内容は参考として利用し、必要に応じて調整してください</p>
+            <p><strong>機密情報</strong>：社外秘の詳細情報は入力を避け、一般的な要件に留めることを推奨します</p>
+            <p><strong>最終確認</strong>：見積もり依頼書は内容を十分確認してから利用してください</p>
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-semibold text-red-800 mb-3">📞 連絡先</h2>
+          <div className="bg-red-50 p-4 rounded-lg space-y-2 text-sm">
+            <p><strong>作成者</strong>：masuda@moonmile.net</p>
+          </div>
+        </section>
+
+      </div>
+
+      <div className="mt-8 text-center">
+        <button
+          onClick={() => setShowHelp(false)}
+          className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          閉じる
+        </button>
+      </div>
+    </div>
+  );
+
   // Markdown風の簡単なフォーマット処理
   const MessageContent = ({ content }: { content: string }) => {
     const formatContent = (text: string) => {
@@ -542,8 +641,20 @@ ${systemArchitecture.scalability_considerations.map(consideration => `・${consi
     <div className="h-screen flex flex-col bg-gray-50">
       {/* ヘッダー */}
       <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-3 md:py-4">
-        <h1 className="text-xl md:text-2xl font-bold text-gray-900">omitt-chan</h1>
-        <p className="text-xs md:text-sm text-gray-600">見積もり依頼作成ツール</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">omitt-chan</h1>
+            <p className="text-xs md:text-sm text-gray-600">見積もり依頼作成ツール</p>
+          </div>
+          <button
+            onClick={() => setShowHelp(true)}
+            className="px-3 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-medium flex items-center"
+            title="使用方法を確認"
+          >
+            <span className="mr-1">❓</span>
+            ヘルプ
+          </button>
+        </div>
       </header>
 
       {/* モバイル用タブナビゲーション */}
@@ -969,6 +1080,15 @@ ${systemArchitecture.scalability_considerations.map(consideration => `・${consi
           )}
         </div>
       </div>
+
+      {/* ヘルプモーダル */}
+      {showHelp && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl max-h-[90vh] overflow-y-auto">
+            <HelpContent />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
