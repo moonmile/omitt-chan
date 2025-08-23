@@ -216,44 +216,75 @@ export default function Home() {
     }
 
     setIsAnalyzing(true);
-    
-    try {
-      const response = await fetch('/api/validate-requirements', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ requirements }),
-      });
 
-      const data = await response.json();
-      
-      if (data.success) {
-        setChatMessages(prev => [...prev, {
-          id: Date.now().toString(),
-          content: data.chatMessage || '検証結果が空でした。',
-          sender: 'assistant',
-          timestamp: new Date()
-        }]);
-      } else {
-        setChatMessages(prev => [...prev, {
-          id: Date.now().toString(),
-          content: data.chatMessage || data.error || '要件の検証に失敗しました。',
-          sender: 'assistant',
-          timestamp: new Date()
-        }]);
+    // --- チェックロジック ---
+    // 個人情報チェック
+    const personalKeywords = ['氏名', '住所', 'メール', '社員', '個人情報', '電話', '生年月日', '連絡先'];
+    const allTexts = getAllRequirements().map(r => `${r.title} ${r.description}`).join(' ');
+    const containsPersonalData = personalKeywords.some(k => allTexts.includes(k));
+
+    // 利用者規模・属性チェック
+    // user_scopeは非機能要件や制約条件などに含まれる可能性あり
+    let userScopeText = '';
+    for (const req of [...requirements.non_functional_requirements, ...requirements.constraints]) {
+      if (req.title.includes('利用者') || req.title.includes('ユーザー') || req.title.includes('user_scope')) {
+        userScopeText = req.description || req.title;
+        break;
       }
-    } catch (error) {
-      console.error('Error validating requirements:', error);
+    }
+    // featuresやwishesにも含まれる場合あり
+    if (!userScopeText) {
+      for (const req of [...requirements.functional_requirements, ...requirements.wishes]) {
+        if (req.title.includes('利用者') || req.title.includes('ユーザー') || req.title.includes('user_scope')) {
+          userScopeText = req.description || req.title;
+          break;
+        }
+      }
+    }
+
+    // 新規 or リプレース判定
+    let projectTypeText = '';
+    for (const req of [...getAllRequirements()]) {
+      if (req.title.includes('新規') || req.title.includes('リプレース') || req.title.includes('既存')) {
+        projectTypeText = req.description || req.title;
+        break;
+      }
+    }
+
+    // --- 検証結果メッセージ生成 ---
+    let resultMsg = '🔍 <strong>要件の検証結果：</strong><br><br>';
+    // 個人情報
+    if (containsPersonalData) {
+      resultMsg += '✅ 個人情報：含まれています<br>「個人情報を扱う場合、セキュリティ要件の明記が必要です」<br>';
+    } else {
+      resultMsg += '✅ 個人情報：含まれていません（問題なし）<br>';
+    }
+
+    // 利用者規模
+    if (userScopeText) {
+      resultMsg += `✅ 利用者規模：${userScopeText}<br>`;
+    } else {
+      resultMsg += '⚠️ 利用者規模：未記入 → 「利用者の範囲と人数を記入してください」<br>';
+    }
+
+    // システム種別
+    if (projectTypeText) {
+      resultMsg += `✅ システム種別：${projectTypeText}<br>`;
+    } else {
+      resultMsg += '⚠️ システム種別：未記入 → 「新規開発か、既存システムの置き換えかを選択してください」<br>';
+    }
+
+    resultMsg += '<br>📌 これらの情報は、IT業者がセキュリティ・構成・費用を判断するために重要です。';
+
+    setTimeout(() => {
       setChatMessages(prev => [...prev, {
         id: Date.now().toString(),
-        content: '要件検証中にエラーが発生しました。もう一度お試しください。',
+        content: resultMsg,
         sender: 'assistant',
         timestamp: new Date()
       }]);
-    } finally {
       setIsAnalyzing(false);
-    }
+    }, 500);
   };
 
   const saveRequirementsAsJSON = () => {
@@ -418,6 +449,52 @@ export default function Home() {
 ご質問やご相談がございましたら、お気軽にお声がけください。`;
     }
 
+    // --- 追加項目の判定ロジック ---
+    const personalKeywords = ['氏名', '住所', 'メール', '社員', '個人情報', '電話', '生年月日', '連絡先'];
+    const allTexts = getAllRequirements().map(r => `${r.title} ${r.description}`).join(' ');
+    const containsPersonalData = personalKeywords.some(k => allTexts.includes(k));
+
+    // 利用者規模・属性
+    let userScopeText = '';
+    for (const req of [...requirements.non_functional_requirements, ...requirements.constraints]) {
+      if (req.title.includes('利用者') || req.title.includes('ユーザー') || req.title.includes('user_scope')) {
+        userScopeText = req.description || req.title;
+        break;
+      }
+    }
+    if (!userScopeText) {
+      for (const req of [...requirements.functional_requirements, ...requirements.wishes]) {
+        if (req.title.includes('利用者') || req.title.includes('ユーザー') || req.title.includes('user_scope')) {
+          userScopeText = req.description || req.title;
+          break;
+        }
+      }
+    }
+
+    // 新規 or リプレース
+    let projectTypeText = '';
+    for (const req of [...getAllRequirements()]) {
+      if (req.title.includes('新規') || req.title.includes('リプレース') || req.title.includes('既存')) {
+        projectTypeText = req.description || req.title;
+        break;
+      }
+    }
+
+    // --- 機能要件要約生成 ---
+    let featureSummary = '';
+    if (requirements.functional_requirements.length > 0) {
+      // タイトルと説明を連結し、200文字程度で要約
+      const allFeatures = requirements.functional_requirements.map(req => `${req.title}: ${req.description}`).join('、');
+      if (allFeatures.length > 200) {
+        featureSummary = allFeatures.slice(0, 200) + '...';
+      } else {
+        featureSummary = allFeatures;
+      }
+    } else {
+      featureSummary = '機能要件が未記入です。';
+    }
+
+    // --- テンプレート生成 ---
     const template = `見積もり依頼書
 
 【プロジェクト概要】
@@ -430,8 +507,19 @@ ${systemArchitecture.architecture_type === 'web' ? 'Webアプリケーション'
   systemArchitecture.architecture_type === 'other' ? 'その他のシステム' :
   'オンプレミスシステム'
 }の開発をご依頼いたします。
+【主な機能要件まとめ】
+${featureSummary}
 
 【システム要件】
+■ 個人情報の有無
+${containsPersonalData ? '個人情報を含む（セキュリティ要件の明記が必要）' : '個人情報は含まれていません'}
+
+■ 利用者規模・属性
+${userScopeText ? userScopeText : '未記入（利用者の範囲と人数を記入してください）'}
+
+■ 新規 or リプレース
+${projectTypeText ? projectTypeText : '未記入（新規開発か、既存システムの置き換えかを記入してください）'}
+
 ■ 機能要件 (${requirements.functional_requirements.length}件)
 ${requirements.functional_requirements.map(req => `・${req.title}: ${req.description}`).join('\n')}
 
