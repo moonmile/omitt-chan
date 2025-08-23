@@ -32,7 +32,7 @@ interface SystemComponent {
 }
 
 interface SystemArchitecture {
-  architecture_type: 'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded' | 'mobile_app' | 'game';
+  architecture_type: 'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded' | 'mobile_app' | 'game' | 'other';
   deployment_environment: 'cloud' | 'on_premise' | 'hybrid';
   components: SystemComponent[];
   network_requirements: string[];
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
   try {
     const { requirements, preferredArchitectureType } = await request.json() as { 
       requirements: StructuredRequirements;
-      preferredArchitectureType?: 'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded' | 'mobile_app' | 'game';
+      preferredArchitectureType?: 'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded' | 'mobile_app' | 'game' | 'other';
     };
 
     const systemPrompt = `
@@ -59,13 +59,14 @@ ${preferredArchitectureType ? `
 - hybrid: クラウドとオンプレミスの組み合わせ
 - on_premise: オンプレミス環境での運用
 - embedded: ハードウェア組み込み型リアルタイムシステム
+- other: 上記に当てはまらない特殊なシステム構成
 
 このタイプを最優先に考慮して設計してください。
 ` : ''}
 
 以下の構造で返してください：
 {
-  "architecture_type": "web|cloud|hybrid|on_premise|embedded|mobile_app|game",
+  "architecture_type": "web|cloud|hybrid|on_premise|embedded|mobile_app|game|other",
   "deployment_environment": "cloud|on_premise|hybrid", 
   "components": [
     {
@@ -90,7 +91,7 @@ ${preferredArchitectureType ? `
 5. 設計指針からアーキテクチャパターンを決定
 ${preferredArchitectureType ? `6. 優先アーキテクチャタイプ「${preferredArchitectureType}」に適したコンポーネント構成を選択` : ''}
 
-重要：architecture_typeフィールドには${preferredArchitectureType ? `「${preferredArchitectureType}」を設定` : 'web、mobile_app、game、cloud、hybrid、on_premise、embeddedのいずれかを適切に選択'}してください。
+重要：architecture_typeフィールドには${preferredArchitectureType ? `「${preferredArchitectureType}」を設定` : 'web、mobile_app、game、cloud、hybrid、on_premise、embedded、otherのいずれかを適切に選択'}してください。
 
 ${preferredArchitectureType === 'embedded' ? `
 組み込みシステム特有の考慮事項：
@@ -130,6 +131,18 @@ ${preferredArchitectureType === 'game' ? `
 - AI（敵キャラクター、NPC）の実装
 - 課金システムとゲーム内購入
 - 不正行為対策とセキュリティ
+` : ''}
+
+${preferredArchitectureType === 'other' ? `
+その他のシステム特有の考慮事項：
+- 要件から特殊な用途やニーズを分析
+- 既存システムとの連携や制約
+- 特別な技術要件や規制要件
+- カスタム仕様や独自プロトコル
+- 特殊なハードウェア要件
+- 業界固有の標準やガイドライン
+- パフォーマンス、セキュリティ、可用性の特別な要求
+- 将来の拡張性や移行性の考慮
 ` : ''}
 
 現代的な技術スタックを推奨し、運用保守性・拡張性を考慮してください。

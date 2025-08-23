@@ -21,7 +21,7 @@ interface SystemComponent {
 }
 
 interface SystemArchitecture {
-  architecture_type: 'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded' | 'mobile_app' | 'game';
+  architecture_type: 'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded' | 'mobile_app' | 'game' | 'other';
   deployment_environment: 'cloud' | 'on_premise' | 'hybrid';
   components: SystemComponent[];
   network_requirements: string[];
@@ -71,7 +71,7 @@ export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [systemArchitecture, setSystemArchitecture] = useState<SystemArchitecture | null>(null);
   const [isGeneratingArchitecture, setIsGeneratingArchitecture] = useState(false);
-  const [selectedArchitectureType, setSelectedArchitectureType] = useState<'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded' | 'mobile_app' | 'game'>('web');
+  const [selectedArchitectureType, setSelectedArchitectureType] = useState<'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded' | 'mobile_app' | 'game' | 'other'>('web');
   const [activeTab, setActiveTab] = useState<'chat' | 'requirements' | 'estimate'>('chat');
   const [requirements, setRequirements] = useState<StructuredRequirements>({
     functional_requirements: [],
@@ -426,6 +426,7 @@ ${systemArchitecture.architecture_type === 'web' ? 'Webアプリケーション'
   systemArchitecture.architecture_type === 'embedded' ? '組み込みシステム' :
   systemArchitecture.architecture_type === 'mobile_app' ? 'スマートフォンアプリケーション' :
   systemArchitecture.architecture_type === 'game' ? 'ゲームアプリケーション' :
+  systemArchitecture.architecture_type === 'other' ? 'その他のシステム' :
   'オンプレミスシステム'
 }の開発をご依頼いたします。
 
@@ -735,7 +736,7 @@ ${systemArchitecture.scalability_considerations.map(consideration => `・${consi
                 </label>
                 <select
                   value={selectedArchitectureType}
-                  onChange={(e) => setSelectedArchitectureType(e.target.value as 'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded' | 'mobile_app' | 'game')}
+                  onChange={(e) => setSelectedArchitectureType(e.target.value as 'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded' | 'mobile_app' | 'game' | 'other')}
                   className="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
                 >
                   <option value="web">Webアプリケーション</option>
@@ -745,6 +746,7 @@ ${systemArchitecture.scalability_considerations.map(consideration => `・${consi
                   <option value="hybrid">ハイブリッド</option>
                   <option value="on_premise">オンプレミス</option>
                   <option value="embedded">組み込みシステム</option>
+                  <option value="other">その他</option>
                 </select>
                 <p className="text-xs text-gray-500 mt-1">
                   {selectedArchitectureType === 'web' && 'ブラウザベースのWebアプリケーション'}
@@ -754,6 +756,7 @@ ${systemArchitecture.scalability_considerations.map(consideration => `・${consi
                   {selectedArchitectureType === 'hybrid' && 'クラウドとオンプレミスを組み合わせた構成'}
                   {selectedArchitectureType === 'on_premise' && '自社サーバーでの運用を前提とした構成'}
                   {selectedArchitectureType === 'embedded' && 'ハードウェアに組み込まれたリアルタイムシステム'}
+                  {selectedArchitectureType === 'other' && '上記に当てはまらない特殊なシステム構成'}
                 </p>
               </div>
               
@@ -919,7 +922,7 @@ ${systemArchitecture.scalability_considerations.map(consideration => `・${consi
                     </label>
                     <select
                       value={selectedArchitectureType}
-                      onChange={(e) => setSelectedArchitectureType(e.target.value as 'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded' | 'mobile_app' | 'game')}
+                      onChange={(e) => setSelectedArchitectureType(e.target.value as 'web' | 'cloud' | 'hybrid' | 'on_premise' | 'embedded' | 'mobile_app' | 'game' | 'other')}
                       className="w-full px-4 py-3 text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     >
                       <option value="web">Webアプリケーション</option>
@@ -929,6 +932,7 @@ ${systemArchitecture.scalability_considerations.map(consideration => `・${consi
                       <option value="hybrid">ハイブリッド</option>
                       <option value="on_premise">オンプレミス</option>
                       <option value="embedded">組み込みシステム</option>
+                      <option value="other">その他</option>
                     </select>
                     <p className="text-sm text-gray-500 mt-2">
                       {selectedArchitectureType === 'web' && 'ブラウザベースのWebアプリケーション'}
@@ -938,6 +942,7 @@ ${systemArchitecture.scalability_considerations.map(consideration => `・${consi
                       {selectedArchitectureType === 'hybrid' && 'クラウドとオンプレミスを組み合わせた構成'}
                       {selectedArchitectureType === 'on_premise' && '自社サーバーでの運用を前提とした構成'}
                       {selectedArchitectureType === 'embedded' && 'ハードウェアに組み込まれたリアルタイムシステム'}
+                      {selectedArchitectureType === 'other' && '上記に当てはまらない特殊なシステム構成'}
                     </p>
                   </div>
                   
