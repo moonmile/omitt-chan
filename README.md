@@ -48,3 +48,10 @@
 - ログイン機能を持ち、各ユーザーが実験データを別々に保存できる
 
 
+# Author
+
+Tomoaki Masuda (moonmile)
+
+# License
+
+MIT License
