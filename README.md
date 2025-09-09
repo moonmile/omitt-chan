@@ -48,6 +48,15 @@
 - ログイン機能を持ち、各ユーザーが実験データを別々に保存できる
 
 
+# 設定方法
+
+- .env.local の OPENAI_API_BASE_URL に OpenAI API のベースURLを設定してください。通常は https://api.openai.com/v1 です。
+
+# サンプルサイト
+
+https://omitt-chan.vercel.app/
+
+
 # Author
 
 Tomoaki Masuda (moonmile)
